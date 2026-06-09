@@ -1,0 +1,111 @@
+// ComparisonCard.tsx
+//
+// A visual card that summarises one plan.
+// Used in the "Card View" toggle (alternative to table rows).
+
+import type { PlanRow } from "../hooks/usePlans";
+import { formatUSD, DRAWDOWN_STYLES } from "../lib/utils";
+
+export default function ComparisonCard({ plan }: { plan: PlanRow }) {
+  const dd = DRAWDOWN_STYLES[plan.drawdown_type] ?? {
+    label: plan.drawdown_type,
+    color: "bg-gray-500/20 text-gray-300",
+  };
+
+  return (
+    <div className="group relative flex flex-col rounded-2xl border border-white/10 bg-gray-900/80
+                    p-5 shadow-lg transition hover:border-brand-400/50 hover:shadow-brand-400/10">
+
+      {/* ── Header: logo + firm name ──────────────────────── */}
+      <div className="flex items-center gap-3">
+        {plan.logo_url ? (
+          <img
+            src={plan.logo_url}
+            alt={plan.firm_name}
+            className="h-10 w-10 rounded-lg object-contain"
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/30
+                          text-lg font-bold text-brand-300">
+            {plan.firm_name.charAt(0)}
+          </div>
+        )}
+        <div>
+          <h3 className="text-lg font-semibold text-white">{plan.firm_name}</h3>
+          <div className="flex gap-1.5 mt-0.5">
+            {(plan.account_type && plan.account_type !== "Standard") && (
+              <span className="inline-block rounded-full px-2 py-0.5 text-xs font-medium bg-brand-500/20 text-brand-300">
+                {plan.account_type}
+              </span>
+            )}
+            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${dd.color}`}>
+              {dd.label}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Account size (hero number) ────────────────────── */}
+      <div className="mt-4">
+        <p className="text-3xl font-bold tracking-tight text-white">
+          {plan.plan_label || formatUSD(plan.account_size)}
+        </p>
+        <p className="text-sm text-gray-400">Account Size</p>
+      </div>
+
+      {/* ── Key metrics grid ──────────────────────────────── */}
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <Metric label="Eval Fee"       value={formatUSD(plan.eval_fee)} />
+        <Metric label="Activation"     value={plan.activation_fee ? formatUSD(plan.activation_fee) : "—"} />
+        <Metric label="Profit Split"   value={plan.profit_split != null ? `${plan.profit_split}%` : "—"} />
+        <Metric label="Drawdown"       value={formatUSD(plan.drawdown_amount)} />
+        <Metric label="Daily Loss"     value={plan.daily_loss_limit ? formatUSD(plan.daily_loss_limit) : "—"} />
+        <Metric label="Target"         value={formatUSD(plan.profit_target)} />
+      </div>
+
+      {/* ── Total cost highlight ──────────────────────────── */}
+      <div className="mt-4 rounded-xl bg-brand-600/10 p-3">
+        <p className="text-xs uppercase tracking-wider text-brand-300 text-center">Total Cost to Funded</p>
+        {plan.active_discount_pct > 0 ? (
+          <div className="mt-2">
+            <p className="text-center text-sm text-gray-400 line-through">
+              {formatUSD(plan.base_cost_to_funded)}
+            </p>
+            <p className="mt-1 text-center text-2xl font-bold text-green-400">
+              {formatUSD(plan.total_cost_to_funded)}
+            </p>
+            <p className="mt-1 text-center text-xs text-green-300 font-medium">
+              ✓ {formatUSD(plan.base_cost_to_funded - plan.total_cost_to_funded)} saved ({plan.active_discount_pct}% off)
+            </p>
+          </div>
+        ) : (
+          <p className="mt-1 text-center text-2xl font-bold text-brand-200">
+            {formatUSD(plan.total_cost_to_funded)}
+          </p>
+        )}
+      </div>
+
+      {/* ── CTA ───────────────────────────────────────────── */}
+      <a
+        href={plan.website_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 block w-full rounded-xl bg-brand-500 py-2.5 text-center text-sm font-semibold
+                   text-white transition hover:bg-brand-400 focus:outline-none focus:ring-2
+                   focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-gray-950"
+      >
+        Buy Now →
+      </a>
+    </div>
+  );
+}
+
+// ── Tiny sub-component for metric rows ─────────────────────
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="font-medium text-white">{value}</p>
+      <p className="text-xs text-gray-500">{label}</p>
+    </div>
+  );
+}
