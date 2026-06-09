@@ -1,0 +1,21 @@
+{
+  "name": "moxapp-studio",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "deploy-graphql": "sanity graphql deploy",
+    "migrate": "npx ts-node scripts/migrate.ts"
+  },
+  "dependencies": {
+    "@sanity/icons": "^3.0.0",
+    "@sanity/vision": "^3.0.0",
+    "sanity": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@sanity/types": "^3.0.0"
+  }
+}
