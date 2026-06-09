@@ -8,8 +8,8 @@ export default defineConfig({
   name: 'moxapp-studio',
   title: 'MoxApp Studio',
 
-  projectId: process.env.SANITY_STUDIO_PROJECT_ID!,
-  dataset: process.env.SANITY_STUDIO_DATASET ?? 'production',
+  projectId: process.env.SANITY_STUDIO_PROJECT_ID || '3d6emtst',
+  dataset: process.env.SANITY_STUDIO_DATASET || 'production',
 
   plugins: [
     structureTool({ structure }),
