@@ -1,5 +1,5 @@
 import { StructureBuilder } from 'sanity/structure'
-import { BuildingIcon, TagIcon } from '@sanity/icons'
+import { OlistIcon, TagIcon } from '@sanity/icons'
 
 export const structure = (S: StructureBuilder) =>
   S.list()
@@ -7,7 +7,7 @@ export const structure = (S: StructureBuilder) =>
     .items([
       S.listItem()
         .title('Prop Firms')
-        .icon(BuildingIcon)
+        .icon(OlistIcon)
         .child(
           S.documentTypeList('firm')
             .title('Prop Firms')
@@ -23,10 +23,9 @@ export const structure = (S: StructureBuilder) =>
             .defaultOrdering([{ field: 'totalCostToFunded', direction: 'asc' }])
         ),
       S.divider(),
-      // Plans grouped by firm for easy editing
       S.listItem()
         .title('Plans by Firm')
-        .icon(BuildingIcon)
+        .icon(OlistIcon)
         .child(
           S.documentTypeList('firm')
             .title('Select a Firm')
