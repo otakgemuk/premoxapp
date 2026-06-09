@@ -1,11 +1,11 @@
 import { defineType, defineField } from 'sanity'
-import { BuildingIcon } from '@sanity/icons'
+import { OlistIcon } from '@sanity/icons'
 
 export const firm = defineType({
   name: 'firm',
   title: 'Prop Firm',
   type: 'document',
-  icon: BuildingIcon,
+  icon: OlistIcon,
   fields: [
     defineField({
       name: 'firmId',
