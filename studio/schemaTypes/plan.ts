@@ -13,7 +13,6 @@ export const plan = defineType({
     { name: 'meta',       title: 'Meta' },
   ],
   fields: [
-    // ── Identity ────────────────────────────────────────────
     defineField({
       name: 'firm',
       title: 'Firm',
@@ -59,8 +58,6 @@ export const plan = defineType({
       group: 'identity',
       initialValue: false,
     }),
-
-    // ── Rules & Limits ───────────────────────────────────────
     defineField({
       name: 'drawdownType',
       title: 'Drawdown Type',
@@ -78,65 +75,15 @@ export const plan = defineType({
         layout: 'radio',
       },
     }),
-    defineField({
-      name: 'drawdownAmount',
-      title: 'Max Drawdown ($)',
-      type: 'number',
-      group: 'rules',
-    }),
-    defineField({
-      name: 'dailyLossLimit',
-      title: 'Daily Loss Limit ($)',
-      type: 'number',
-      group: 'rules',
-    }),
-    defineField({
-      name: 'profitTarget',
-      title: 'Profit Target ($)',
-      type: 'number',
-      group: 'rules',
-    }),
-    defineField({
-      name: 'profitSplit',
-      title: 'Profit Split (%)',
-      type: 'number',
-      group: 'rules',
-      validation: (r) => r.min(0).max(100),
-    }),
-    defineField({
-      name: 'maxFundedAccounts',
-      title: 'Max Funded Accounts',
-      type: 'number',
-      group: 'rules',
-    }),
-    defineField({
-      name: 'maxContracts',
-      title: 'Max Contracts',
-      type: 'number',
-      group: 'rules',
-    }),
-    defineField({
-      name: 'minTradingDays',
-      title: 'Min Trading Days to Pass',
-      type: 'number',
-      group: 'rules',
-    }),
-    defineField({
-      name: 'consistencyEval',
-      title: 'Consistency Rule — Eval (%)',
-      description: '0 = no consistency rule during evaluation',
-      type: 'number',
-      group: 'rules',
-      validation: (r) => r.min(0).max(100),
-    }),
-    defineField({
-      name: 'consistencyFunded',
-      title: 'Consistency Rule — Funded (%)',
-      description: '0 = no consistency rule on funded account',
-      type: 'number',
-      group: 'rules',
-      validation: (r) => r.min(0).max(100),
-    }),
+    defineField({ name: 'drawdownAmount',   title: 'Max Drawdown ($)',         type: 'number', group: 'rules' }),
+    defineField({ name: 'dailyLossLimit',   title: 'Daily Loss Limit ($)',     type: 'number', group: 'rules' }),
+    defineField({ name: 'profitTarget',     title: 'Profit Target ($)',        type: 'number', group: 'rules' }),
+    defineField({ name: 'profitSplit',      title: 'Profit Split (%)',         type: 'number', group: 'rules', validation: (r) => r.min(0).max(100) }),
+    defineField({ name: 'maxFundedAccounts',title: 'Max Funded Accounts',     type: 'number', group: 'rules' }),
+    defineField({ name: 'maxContracts',     title: 'Max Contracts',           type: 'number', group: 'rules' }),
+    defineField({ name: 'minTradingDays',   title: 'Min Trading Days to Pass',type: 'number', group: 'rules' }),
+    defineField({ name: 'consistencyEval',  title: 'Consistency Rule — Eval (%)',   type: 'number', group: 'rules', validation: (r) => r.min(0).max(100) }),
+    defineField({ name: 'consistencyFunded',title: 'Consistency Rule — Funded (%)', type: 'number', group: 'rules', validation: (r) => r.min(0).max(100) }),
     defineField({
       name: 'payoutFrequency',
       title: 'Payout Frequency',
@@ -144,85 +91,30 @@ export const plan = defineType({
       group: 'rules',
       options: {
         list: [
-          { title: 'Weekly', value: 'weekly' },
+          { title: 'Weekly',    value: 'weekly' },
           { title: 'Bi-Weekly', value: 'biweekly' },
-          { title: 'Monthly', value: 'monthly' },
+          { title: 'Monthly',   value: 'monthly' },
           { title: 'On Demand', value: 'on_demand' },
         ],
         layout: 'radio',
       },
     }),
-
-    // ── Pricing ──────────────────────────────────────────────
-    defineField({
-      name: 'retailEvalFee',
-      title: 'Retail Eval Fee ($)',
-      description: 'Full price before any discount',
-      type: 'number',
-      group: 'pricing',
-    }),
-    defineField({
-      name: 'evalFee',
-      title: 'Eval Fee ($)',
-      type: 'number',
-      group: 'pricing',
-      validation: (r) => r.required().min(0),
-    }),
-    defineField({
-      name: 'activationFee',
-      title: 'Activation Fee ($)',
-      description: 'One-time fee paid after passing eval',
-      type: 'number',
-      group: 'pricing',
-      initialValue: 0,
-    }),
-    defineField({
-      name: 'monthlyFee',
-      title: 'Monthly Fee ($)',
-      type: 'number',
-      group: 'pricing',
-      initialValue: 0,
-    }),
-    defineField({
-      name: 'activeDiscountPct',
-      title: 'Active Discount (%)',
-      description: 'Current promo discount percentage',
-      type: 'number',
-      group: 'pricing',
-      initialValue: 0,
-      validation: (r) => r.min(0).max(100),
-    }),
-    defineField({
-      name: 'hasDiscount',
-      title: 'Has Active Discount',
-      type: 'boolean',
-      group: 'pricing',
-      initialValue: false,
-    }),
-    defineField({
-      name: 'baseCostToFunded',
-      title: 'Base Cost to Funded ($)',
-      description: 'eval_fee + activation_fee before discount',
-      type: 'number',
-      group: 'pricing',
-    }),
+    defineField({ name: 'retailEvalFee',     title: 'Retail Eval Fee ($)',      type: 'number', group: 'pricing' }),
+    defineField({ name: 'evalFee',           title: 'Eval Fee ($)',             type: 'number', group: 'pricing', validation: (r) => r.required().min(0) }),
+    defineField({ name: 'activationFee',     title: 'Activation Fee ($)',       type: 'number', group: 'pricing', initialValue: 0 }),
+    defineField({ name: 'monthlyFee',        title: 'Monthly Fee ($)',          type: 'number', group: 'pricing', initialValue: 0 }),
+    defineField({ name: 'activeDiscountPct', title: 'Active Discount (%)',      type: 'number', group: 'pricing', initialValue: 0, validation: (r) => r.min(0).max(100) }),
+    defineField({ name: 'hasDiscount',       title: 'Has Active Discount',      type: 'boolean', group: 'pricing', initialValue: false }),
+    defineField({ name: 'baseCostToFunded',  title: 'Base Cost to Funded ($)',  type: 'number', group: 'pricing' }),
     defineField({
       name: 'totalCostToFunded',
       title: 'Total Cost to Funded ($)',
-      description: 'Final cost after discount. For NexGen Eval: (eval_fee × (1 - discount%)) + activation_fee. For Standard: (eval_fee + activation_fee) × (1 - discount%). For Instant: eval_fee only.',
+      description: 'Standard: (eval+activation)×(1-discount%). NexGen Eval: (eval×(1-discount%))+activation. Instant: eval only.',
       type: 'number',
       group: 'pricing',
       validation: (r) => r.required().min(0),
     }),
-
-    // ── Meta ─────────────────────────────────────────────────
-    defineField({
-      name: 'priceVerified',
-      title: 'Price Verified',
-      type: 'boolean',
-      group: 'meta',
-      initialValue: true,
-    }),
+    defineField({ name: 'priceVerified', title: 'Price Verified', type: 'boolean', group: 'meta', initialValue: true }),
     defineField({
       name: 'priceStatus',
       title: 'Price Status',
@@ -230,45 +122,20 @@ export const plan = defineType({
       group: 'meta',
       options: {
         list: [
-          { title: 'OK', value: 'ok' },
+          { title: 'OK',           value: 'ok' },
           { title: 'Needs Review', value: 'needs_review' },
-          { title: 'Outdated', value: 'outdated' },
+          { title: 'Outdated',     value: 'outdated' },
         ],
         layout: 'radio',
       },
       initialValue: 'ok',
     }),
-    defineField({
-      name: 'notes',
-      title: 'Internal Notes',
-      type: 'text',
-      rows: 3,
-      group: 'meta',
-    }),
+    defineField({ name: 'notes', title: 'Internal Notes', type: 'text', rows: 3, group: 'meta' }),
   ],
   preview: {
-    select: {
-      title: 'planLabel',
-      subtitle: 'firm.name',
-      discount: 'activeDiscountPct',
-    },
-    prepare({ title, subtitle, discount }) {
-      return {
-        title,
-        subtitle: `${subtitle}${discount ? ` · ${discount}% off` : ''}`,
-      }
+    select: { title: 'planLabel', subtitle: 'firm.name', discount: 'activeDiscountPct' },
+    prepare({ title, subtitle, discount }: any) {
+      return { title, subtitle: `${subtitle}${discount ? \` · \${discount}% off\` : ''}` }
     },
   },
-  orderings: [
-    {
-      title: 'Total Cost (Low → High)',
-      name: 'totalCostAsc',
-      by: [{ field: 'totalCostToFunded', direction: 'asc' }],
-    },
-    {
-      title: 'Firm Name A→Z',
-      name: 'firmAsc',
-      by: [{ field: 'firm.name', direction: 'asc' }],
-    },
-  ],
 })
