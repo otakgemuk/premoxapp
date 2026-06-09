@@ -5,4 +5,5 @@ export default defineCliConfig({
     projectId: '3d6emtst',
     dataset: 'production',
   },
+  studioHost: 'moxapp',
 })
