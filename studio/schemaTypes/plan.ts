@@ -135,7 +135,7 @@ export const plan = defineType({
   preview: {
     select: { title: 'planLabel', subtitle: 'firm.name', discount: 'activeDiscountPct' },
     prepare({ title, subtitle, discount }: any) {
-      return { title, subtitle: `${subtitle}${discount ? \` · \${discount}% off\` : ''}` }
+      return { title, subtitle: subtitle + (discount ? ' · ' + discount + '% off' : '') }
     },
   },
 })
