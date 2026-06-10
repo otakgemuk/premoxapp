@@ -14,7 +14,7 @@ import { usePlans, type PlanFilters, type PlanRow } from "./hooks/usePlans";
 type ViewMode = "table" | "cards";
 
 export default function App() {
-  // ── Filter state (source of truth) ─────────────────────
+  // ── Filter state (source of truth) ─────────────────
   const [accountSize, setAccountSize]   = useState(0);
   const [accountTypes, setAccountTypes] = useState<string[]>([]);
   const [drawdowns, setDrawdowns]       = useState<string[]>([]);
@@ -25,29 +25,26 @@ export default function App() {
   const [viewMode, setViewMode]         = useState<ViewMode>("table");
 
   // Parse sort value "field:order"
-  const [sort, order] = sortValue.split(":") as [string, "asc" | "desc"];
+  // sortValue is passed through to usePlans as "field:order"
 
   const filters: PlanFilters = {
     accountSize:  accountSize || undefined,
-    accountType:  accountTypes.length ? accountTypes : undefined,
-    drawdownType: drawdowns.length ? drawdowns : undefined,
+    accountTypes: accountTypes.length ? accountTypes : undefined,
+    drawdowns:    drawdowns.length ? drawdowns : undefined,
     firmIds:      firmIds.length ? firmIds : undefined,
     search:       search || undefined,
-    sort,
-    order,
+    sortValue,
     page,
-    limit: 100,
+    pageSize: 100,
   };
 
-  const { data, pagination, isLoading, error, firms } = usePlans(filters);
+  const { data, allPlans, pagination, isLoading, error, firms } = usePlans(filters);
 
-  // ── Export to Markdown ─────────────────────────────────
-  // Fetches plans.json directly and applies current filters (no pagination).
-  // When no filters are active, exports ALL plans.
-  const exportMarkdown = useCallback(async () => {
-    const res = await fetch("./plans.json");
-    if (!res.ok) return alert("Failed to load plans data");
-    let rows: PlanRow[] = await res.json();
+  // ── Export to Markdown ─────────────────────────
+  // Uses allPlans from usePlans (synchronous) — no fetch before .click(),
+  // and exports live Sanity data instead of the bundled JSON snapshot.
+  const exportMarkdown = useCallback(() => {
+    let rows: PlanRow[] = [...allPlans];
 
     // Apply the same filters as usePlans (but no pagination)
     if (accountSize && accountSize > 0) {
@@ -115,7 +112,7 @@ export default function App() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  }, [accountSize, accountTypes, drawdowns, firmIds, search, sortValue]);
+  }, [allPlans, accountSize, accountTypes, drawdowns, firmIds, search, sortValue]);
 
   // ── Sync table column sorting → filter state ───────────
   const handleSortingChange = useCallback((sorting: SortingState) => {
@@ -129,7 +126,7 @@ export default function App() {
 
   return (
     <div className="min-h-full bg-gray-950 text-gray-100">
-      {/* ── Header ──────────────────────────────────────────── */}
+      {/* ── Header ────────────────────────────────────── */}
       <header className="border-b border-white/10 bg-gray-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
@@ -198,7 +195,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* ── Main content ────────────────────────────────────── */}
+      {/* ── Main content ────────────────────────────────── */}
       <main className="mx-auto max-w-7xl px-4 py-6 space-y-4">
 
         {/* Filter bar */}
@@ -250,7 +247,7 @@ export default function App() {
         )}
 
         {/* Pagination */}
-        {pagination.pages > 1 && (
+        {pagination.totalPages > 1 && (
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -261,11 +258,11 @@ export default function App() {
               ← Prev
             </button>
             <span className="text-sm text-gray-400">
-              Page {page} of {pagination.pages}
+              Page {page} of {pagination.totalPages}
             </span>
             <button
-              onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
-              disabled={page === pagination.pages}
+              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              disabled={page === pagination.totalPages}
               className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-gray-300
                          transition hover:border-brand-400 disabled:opacity-30"
             >

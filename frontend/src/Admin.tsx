@@ -18,7 +18,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { PlanRow } from "./hooks/usePlans";
 
-// ── Password gate ──────────────────────────────────────────
+// ── Password gate ──────────────────────────────────
 // Read the hash from build-time env var. If unset, admin is disabled.
 const ADMIN_HASH: string | undefined = import.meta.env.VITE_ADMIN_HASH;
 const SESSION_KEY = "admin_auth";
@@ -99,7 +99,7 @@ function LoginGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// ── Constants ──────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────
 
 const EMPTY_PLAN: PlanRow = {
   firm_id: "", firm_name: "", firm_slug: "", logo_url: null, website_url: "",
@@ -108,10 +108,10 @@ const EMPTY_PLAN: PlanRow = {
   daily_loss_limit: 1000, profit_target: 3000, profit_split: 80,
   eval_fee: 0, activation_fee: 0, monthly_fee: 0, is_one_time: 0,
   payout_frequency: "biweekly", base_cost_to_funded: 0, total_cost_to_funded: 0,
-  active_discount_pct: 0, has_discount: 0, max_funded_status: "not_specified",
+  active_discount_pct: 0, has_discount: 0, max_contracts: 0,
   max_funded_accounts: 0, min_trading_days: 0, consistency_eval: 0, consistency_funded: 0,
-  retail_eval_fee: 0, price_source: "", price_verified: 0, price_status: "",
-  discount_pct: 0, discount_amount: 0, first_payout_days: null,
+  retail_eval_fee: 0, price_verified: 0, price_status: "ok",
+  affiliate_code: null,
 };
 
 const DRAWDOWN_OPTIONS = ["eod", "trailing", "static", "intraday"];
@@ -135,7 +135,7 @@ function calcTotalCost(evalFee: number, activationFee: number, discountPct: numb
   return Math.round((discountedEval + activationFee) * 100) / 100;
 }
 
-// ── Main Admin Component ───────────────────────────────────
+// ── Main Admin Component ─────────────────────────────
 
 function AdminContent() {
   const [plans, setPlans] = useState<PlanRow[]>([]);
@@ -228,7 +228,7 @@ function AdminContent() {
   const firms = Array.from(new Map(plans.map((p) => [p.firm_id, { id: p.firm_id, name: p.firm_name }])).values());
   const filtered = filterFirm ? plans.filter((p) => p.firm_id === filterFirm) : plans;
 
-  // ── Download plans.json ──────────────────────────────────
+  // ── Download plans.json ────────────────────────────
   const handleDownload = () => {
     const json = JSON.stringify(plans, null, 2);
     const blob = new Blob([json], { type: "application/json" });
@@ -241,7 +241,7 @@ function AdminContent() {
     showToast("📥 Downloaded plans.json — upload it to GitHub to deploy");
   };
 
-  // ── Form helpers ─────────────────────────────────────────
+  // ── Form helpers ───────────────────────────────────
   const updateField = (field: keyof PlanRow, value: any) => {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
@@ -414,7 +414,7 @@ function AdminContent() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <Field label="Firm Name *" value={form.firm_name} onChange={(v) => updateField("firm_name", v)} placeholder="e.g. Topstep" />
               <Field label="Firm Slug" value={form.firm_slug} onChange={(v) => updateField("firm_slug", v)} placeholder="auto-generated" />
-              <Field label="Website URL" value={form.website_url} onChange={(v) => updateField("website_url", v)} placeholder="https://..." />
+              <Field label="Website URL" value={form.website_url ?? ""} onChange={(v) => updateField("website_url", v)} placeholder="https://..." />
               <Field label="Trustpilot" value={String(form.trustpilot)} type="number" onChange={(v) => updateField("trustpilot", parseFloat(v) || 0)} />
               <Field label="Account Size *" value={String(form.account_size)} type="number" onChange={(v) => updateField("account_size", parseInt(v) || 0)} />
               <Field label="Plan Label" value={form.plan_label} onChange={(v) => updateField("plan_label", v)} placeholder="auto from size" />
@@ -442,7 +442,7 @@ function AdminContent() {
               <Field label="Discount %" value={String(form.active_discount_pct)} type="number" onChange={(v) => updateField("active_discount_pct", parseInt(v) || 0)} />
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-300">Payout Frequency</label>
-                <select value={form.payout_frequency} onChange={(e) => updateField("payout_frequency", e.target.value)}
+                <select value={form.payout_frequency ?? "biweekly"} onChange={(e) => updateField("payout_frequency", e.target.value)}
                   className="w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white">
                   {PAYOUT_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
@@ -524,10 +524,10 @@ function AdminContent() {
                   <td className="px-3 py-2">
                     <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-xs text-blue-300">{plan.drawdown_type}</span>
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-300">${plan.drawdown_amount.toLocaleString()}</td>
-                  <td className="px-3 py-2 text-right text-gray-300">${plan.profit_target.toLocaleString()}</td>
+                  <td className="px-3 py-2 text-right text-gray-300">${(plan.drawdown_amount ?? 0).toLocaleString()}</td>
+                  <td className="px-3 py-2 text-right text-gray-300">${(plan.profit_target ?? 0).toLocaleString()}</td>
                   <td className="px-3 py-2 text-right text-gray-300">${plan.eval_fee}</td>
-                  <td className="px-3 py-2 text-right font-bold text-brand-300">${plan.total_cost_to_funded.toFixed(2)}</td>
+                  <td className="px-3 py-2 text-right font-bold text-brand-300">${(plan.total_cost_to_funded ?? 0).toFixed(2)}</td>
                   <td className="px-3 py-2 text-center">
                     <button onClick={() => handleEdit(i)} className="mr-2 text-xs text-brand-400 hover:text-brand-300">Edit</button>
                     <button onClick={() => handleDelete(i)} className="text-xs text-red-400 hover:text-red-300">Delete</button>
@@ -542,7 +542,7 @@ function AdminContent() {
   );
 }
 
-// ── Reusable form field ────────────────────────────────────
+// ── Reusable form field ────────────────────────────────
 function Field({ label, value, onChange, type = "text", placeholder }: {
   label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string;
 }) {
