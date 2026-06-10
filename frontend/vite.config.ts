@@ -35,8 +35,7 @@ function copyDataPlugin() {
 
 export default defineConfig({
   plugins: [react(), copyDataPlugin()],
-  // Use VITE_BASE env var to override (e.g. "/" for Render/Vercel, "/prop-firm-api/" for GitHub Pages)
-  base: process.env.VITE_BASE || (process.env.VERCEL ? "/" : "/MoxApp/"),
+  base: "./",
   server: {
     port: 5173,
   },
