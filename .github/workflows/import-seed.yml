@@ -52,7 +52,7 @@ jobs:
               print('  could not parse /users/me response — token may be invalid')
           "
           echo "── Role on project 3d6emtst ──"
-          curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" "https://api.sanity.io/v2021-06-07/projects/3d6emtst" | python3 -c "
+          curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" "skZ7IMpcG8h0NCLZiEatacmLuPRy1tDzQddyTcA9gwwyAYY9VxBa1fDJkLyAi0Th0Vk2lZwjtHj1oe39zVD1VSR25TaEq4RY1u02himaehYBpfzLkmJOKXelYXluMGucOqwUPgvNC5Dut8r4yENlg0jnJxSa7VhR2xLOuWt0jZzRVeG6BInn" | python3 -c "
           import json,sys
           try:
               p=json.load(sys.stdin)
