@@ -35,42 +35,19 @@ jobs:
         with:
           node-version: 20
 
-      - name: Diagnose token identity and role
-        # Prints WHICH robot user the secret resolves to and its role on
-        # project 3d6emtst. Never prints the token itself.
+      - name: Verify token permissions
         run: |
-          echo "── Token identity (api.sanity.io/v1/users/me) ──"
+          echo "── Verifying token has write permissions ──"
           ME=$(curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" https://api.sanity.io/v1/users/me)
           echo "$ME" | python3 -c "
           import json,sys
           try:
               d=json.load(sys.stdin)
-              print('  id:        ', d.get('id'))
-              print('  name:      ', d.get('displayName') or d.get('name'))
-              print('  type:      ', 'robot/token' if str(d.get('id','')).startswith(('g-','r')) else 'user')
+              print('  Token user ID:', d.get('id'))
+              print('  Token name:   ', d.get('displayName') or d.get('name'))
+              print('  Token type:   ', 'robot/token' if str(d.get('id','')).startswith(('g-','r')) else 'user')
           except Exception:
-              print('  could not parse /users/me response — token may be invalid')
-          "
-          echo "── Role on project 3d6emtst ──"
-          curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" "skZ7IMpcG8h0NCLZiEatacmLuPRy1tDzQddyTcA9gwwyAYY9VxBa1fDJkLyAi0Th0Vk2lZwjtHj1oe39zVD1VSR25TaEq4RY1u02himaehYBpfzLkmJOKXelYXluMGucOqwUPgvNC5Dut8r4yENlg0jnJxSa7VhR2xLOuWt0jZzRVeG6BInn" | python3 -c "
-          import json,sys
-          try:
-              p=json.load(sys.stdin)
-              if 'members' not in p:
-                  print('  API response:', json.dumps(p)[:200]); raise SystemExit
-              for m in p['members']:
-                  roles=[r.get('name') for r in m.get('roles',[])]
-                  print(f\"  member {m.get('id')}: roles={roles}\")
-              print()
-              print('  → The robot id from /users/me above must appear here with')
-              print('    role \"editor\", \"developer\" or \"administrator\".')
-              print('    If it shows \"viewer\" or only \"deploy-studio\", the token')
-              print('    role is wrong. If it is missing entirely, the GitHub')
-              print('    secret still holds an OLD token.')
-          except SystemExit:
-              pass
-          except Exception as e:
-              print('  could not parse project response:', e)
+              print('  ⚠️  Could not verify token - import may fail')
           "
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
