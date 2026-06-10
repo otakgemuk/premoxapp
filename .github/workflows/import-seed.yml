@@ -16,7 +16,40 @@
 #
 # Requires repo secret SANITY_AUTH_TOKEN with EDITOR (or Developer)
 # permissions — Viewer and Deploy Studio tokens cannot create documents.
-
+- name: DEBUG - Check token permissions
+  run: |
+    echo "=== TOKEN DEBUG INFO ==="
+    echo "Token length: ${#SANITY_AUTH_TOKEN}"
+    echo "Token prefix: ${SANITY_AUTH_TOKEN:0:10}..."
+    
+    echo -e "\n=== Testing token with Sanity API ==="
+    
+    # Test 1: Get user info
+    echo "1. Getting token user info:"
+    curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" \
+      "https://api.sanity.io/v1/users/me" | python3 -m json.tool
+    
+    # Test 2: Get project info (requires project access)
+    echo -e "\n2. Getting project info:"
+    curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" \
+      "https://api.sanity.io/v1/projects/3d6emtst" | python3 -m json.tool
+    
+    # Test 3: List datasets (requires read access)
+    echo -e "\n3. Listing datasets:"
+    curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" \
+      "https://api.sanity.io/v1/projects/3d6emtst/datasets" | python3 -m json.tool
+    
+    # Test 4: Try a simple mutation (create a test doc)
+    echo -e "\n4. Testing write permission with a test document:"
+    TEST_DOC='{"_type": "test", "test": true, "timestamp": "'$(date +%s)'"}'
+    curl -X POST -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d "{\"mutations\":[{\"create\": $TEST_DOC}]}" \
+      "https://api.sanity.io/v1/data/mutate/production?returnIds=true" | python3 -m json.tool
+    
+    echo -e "\n=== END DEBUG ==="
+  env:
+    SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
 name: Import Sanity Seed Data
 
 on:
