@@ -14,8 +14,8 @@
 # [A-Za-z0-9_-] (the raw seed contains IDs like "...premium-(no-act)" and
 # "...3.5k..." which Sanity rejects). Firm references are remapped to match.
 #
-# Requires repo secret SANITY_AUTH_TOKEN (already configured for the
-# Deploy Sanity Studio workflow). The token needs Editor permissions.
+# Requires repo secret SANITY_AUTH_TOKEN with EDITOR (or Developer)
+# permissions — Viewer and Deploy Studio tokens cannot create documents.
 
 name: Import Sanity Seed Data
 
@@ -34,6 +34,46 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Diagnose token identity and role
+        # Prints WHICH robot user the secret resolves to and its role on
+        # project 3d6emtst. Never prints the token itself.
+        run: |
+          echo "── Token identity (api.sanity.io/v1/users/me) ──"
+          ME=$(curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" https://api.sanity.io/v1/users/me)
+          echo "$ME" | python3 -c "
+          import json,sys
+          try:
+              d=json.load(sys.stdin)
+              print('  id:        ', d.get('id'))
+              print('  name:      ', d.get('displayName') or d.get('name'))
+              print('  type:      ', 'robot/token' if str(d.get('id','')).startswith(('g-','r')) else 'user')
+          except Exception:
+              print('  could not parse /users/me response — token may be invalid')
+          "
+          echo "── Role on project 3d6emtst ──"
+          curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" "https://api.sanity.io/v2021-06-07/projects/3d6emtst" | python3 -c "
+          import json,sys
+          try:
+              p=json.load(sys.stdin)
+              if 'members' not in p:
+                  print('  API response:', json.dumps(p)[:200]); raise SystemExit
+              for m in p['members']:
+                  roles=[r.get('name') for r in m.get('roles',[])]
+                  print(f\"  member {m.get('id')}: roles={roles}\")
+              print()
+              print('  → The robot id from /users/me above must appear here with')
+              print('    role \"editor\", \"developer\" or \"administrator\".')
+              print('    If it shows \"viewer\" or only \"deploy-studio\", the token')
+              print('    role is wrong. If it is missing entirely, the GitHub')
+              print('    secret still holds an OLD token.')
+          except SystemExit:
+              pass
+          except Exception as e:
+              print('  could not parse project response:', e)
+          "
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
 
       - name: Install dependencies
         working-directory: studio
