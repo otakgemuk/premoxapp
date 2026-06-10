@@ -10,6 +10,10 @@
 # Imports 21 firms + 225 plans from studio/scripts/seed-data.ndjson
 # into project 3d6emtst, dataset "production".
 #
+# A sanitize step rewrites document IDs/slugs to Sanity's allowed charset
+# [A-Za-z0-9_-] (the raw seed contains IDs like "...premium-(no-act)" and
+# "...3.5k..." which Sanity rejects). Firm references are remapped to match.
+#
 # Requires repo secret SANITY_AUTH_TOKEN (already configured for the
 # Deploy Sanity Studio workflow). The token needs Editor permissions.
 
@@ -35,9 +39,45 @@ jobs:
         working-directory: studio
         run: npm install --no-audit --no-fund
 
+      - name: Sanitize document IDs
+        working-directory: studio
+        run: |
+          python3 - <<'PYEOF'
+          import json, re
+
+          def clean(s):
+              s = re.sub(r'[^A-Za-z0-9_-]+', '-', s)
+              return re.sub(r'-{2,}', '-', s).strip('-')
+
+          out = []
+          with open('scripts/seed-data.ndjson') as f:
+              for line in f:
+                  line = line.strip()
+                  if not line: continue
+                  d = json.loads(line)
+                  d['_id'] = clean(d['_id'])
+                  if isinstance(d.get('firm'), dict) and d['firm'].get('_ref'):
+                      d['firm']['_ref'] = clean(d['firm']['_ref'])
+                  for k in ('planId', 'firmId', 'slug'):
+                      if isinstance(d.get(k), dict) and d[k].get('current'):
+                          d[k]['current'] = clean(d[k]['current'])
+                  out.append(json.dumps(d, ensure_ascii=False))
+
+          open('scripts/seed-clean.ndjson', 'w').write('\n'.join(out) + '\n')
+
+          # Fail fast on collisions or dangling references
+          docs = [json.loads(l) for l in out]
+          ids = [d['_id'] for d in docs]
+          assert len(ids) == len(set(ids)), 'duplicate IDs after sanitize'
+          firms = {d['_id'] for d in docs if d['_type'] == 'firm'}
+          refs = {d['firm']['_ref'] for d in docs if d['_type'] == 'plan'}
+          assert not (refs - firms), f'dangling refs: {refs - firms}'
+          print(f'sanitized {len(docs)} docs OK')
+          PYEOF
+
       - name: Import seed data
         working-directory: studio
-        run: npx sanity dataset import scripts/seed-data.ndjson production --replace
+        run: npx sanity dataset import scripts/seed-clean.ndjson --dataset production --replace
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
 
