@@ -16,29 +16,7 @@
 #
 # Requires repo secret SANITY_AUTH_TOKEN with EDITOR (or Developer)
 # permissions — Viewer and Deploy Studio tokens cannot create documents.
-- name: Test Sanity token
-  run: |
-    echo "Testing token with Sanity..."
-    
-    # Simple test to see if token works at all
-    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $SANITY_AUTH_TOKEN" \
-      "https://api.sanity.io/v1/users/me")
-    
-    echo "HTTP Status code: $RESPONSE"
-    
-    if [ "$RESPONSE" = "200" ]; then
-      echo "✅ Token is valid"
-      
-      # Get user info
-      curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" \
-        "https://api.sanity.io/v1/users/me"
-    elif [ "$RESPONSE" = "401" ]; then
-      echo "❌ Token is invalid or expired"
-    else
-      echo "❌ Unexpected response: $RESPONSE"
-    fi
-  env:
-    SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+
 name: Import Sanity Seed Data
 
 on:
@@ -56,23 +34,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Verify token permissions
-        run: |
-          echo "── Verifying token has write permissions ──"
-          ME=$(curl -s -H "Authorization: Bearer $SANITY_AUTH_TOKEN" https://api.sanity.io/v1/users/me)
-          echo "$ME" | python3 -c "
-          import json,sys
-          try:
-              d=json.load(sys.stdin)
-              print('  Token user ID:', d.get('id'))
-              print('  Token name:   ', d.get('displayName') or d.get('name'))
-              print('  Token type:   ', 'robot/token' if str(d.get('id','')).startswith(('g-','r')) else 'user')
-          except Exception:
-              print('  ⚠️  Could not verify token - import may fail')
-          "
-        env:
-          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
 
       - name: Install dependencies
         working-directory: studio
