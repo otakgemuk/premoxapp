@@ -1,0 +1,49 @@
+# Import seed data into the Sanity dataset
+#
+# Manual trigger ONLY (Actions tab → Import Sanity Seed Data → Run workflow).
+#
+# ⚠️  Uses --replace: documents in seed-data.ndjson OVERWRITE any existing
+#     documents with the same _id. Manual edits made in the Studio to those
+#     documents will be lost. Run this to (re)initialize the dataset, not as
+#     a routine sync.
+#
+# Imports 21 firms + 225 plans from studio/scripts/seed-data.ndjson
+# into project 3d6emtst, dataset "production".
+#
+# Requires repo secret SANITY_AUTH_TOKEN (already configured for the
+# Deploy Sanity Studio workflow). The token needs Editor permissions.
+
+name: Import Sanity Seed Data
+
+on:
+  workflow_dispatch:
+
+jobs:
+  import-seed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: studio
+        run: npm install --no-audit --no-fund
+
+      - name: Import seed data
+        working-directory: studio
+        run: npx sanity dataset import scripts/seed-data.ndjson production --replace
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+
+      - name: Verify import
+        working-directory: studio
+        run: |
+          npx sanity documents query '{"firms": count(*[_type == "firm"]), "plans": count(*[_type == "plan"])}' --dataset production
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
