@@ -1,0 +1,41 @@
+# Deploy Sanity Studio to moxapp.sanity.studio
+#
+# Triggers:
+#   - Push to main that touches studio/**
+#   - Manual trigger from the Actions tab (Run workflow)
+#
+# Requires one repo secret (Settings → Secrets and variables → Actions):
+#   SANITY_AUTH_TOKEN — create at sanity.io/manage → project 3d6emtst →
+#   API → Tokens → Add token → permissions: "Deploy Studio" (or Editor)
+
+name: Deploy Sanity Studio
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "studio/**"
+  workflow_dispatch:
+
+jobs:
+  deploy-studio:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: studio
+        run: npm install --no-audit --no-fund
+
+      - name: Deploy Studio
+        working-directory: studio
+        run: npx sanity deploy --yes
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
