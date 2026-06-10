@@ -1,6 +1,7 @@
 // usePlans.ts
 // Fetches plans from Sanity CMS via GROQ query.
-// Falls back to local plans.json if Sanity env vars are not set.
+// Falls back to local plans.json if Sanity env vars are not set,
+// if the Sanity fetch fails (e.g. CORS), or if the dataset is empty.
 
 import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@sanity/client'
@@ -49,6 +50,7 @@ export interface PlanRow {
   website_url: string | null
   logo_url: string | null
   affiliate_code: string | null
+  retail_eval_fee: number | null
   price_verified: number
   price_status: string
 }
@@ -102,6 +104,7 @@ const PLANS_QUERY = `
   "website_url":         firm->websiteUrl,
   "logo_url":            firm->logo.asset->url,
   "affiliate_code":      firm->affiliateCode,
+  "retail_eval_fee":     retailEvalFee,
   "price_verified":      select(priceVerified == true => 1, 0),
   "price_status":        priceStatus,
 }
@@ -136,17 +139,30 @@ export function usePlans(filters: PlanFilters) {
     setIsLoading(true)
     setError(null)
 
+    const loadLocal = async (): Promise<PlanRow[]> => {
+      const res = await fetch('./plans.json')
+      if (!res.ok) throw new Error(`Failed to load plans.json: ${res.status}`)
+      return res.json()
+    }
+
     const load = async () => {
       try {
-        let json: PlanRow[]
+        let json: PlanRow[] = []
 
         if (USE_SANITY && sanityClient) {
-          json = await sanityClient.fetch(PLANS_QUERY)
+          try {
+            json = await sanityClient.fetch(PLANS_QUERY)
+          } catch (sanityErr) {
+            // CORS not whitelisted, network issue, or project misconfig —
+            // degrade gracefully to the bundled snapshot instead of a blank page.
+            console.warn('[usePlans] Sanity fetch failed, falling back to plans.json:', sanityErr)
+            json = []
+          }
+          if (!json || json.length === 0) {
+            json = await loadLocal()
+          }
         } else {
-          // Fallback to local plans.json
-          const res = await fetch('./plans.json')
-          if (!res.ok) throw new Error(`Failed to load plans.json: ${res.status}`)
-          json = await res.json()
+          json = await loadLocal()
         }
 
         if (!cancelled) setAllPlans(json)

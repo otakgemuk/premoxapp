@@ -45,8 +45,10 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        # npm install (not ci) so package.json edits via GitHub web UI
+        # never fail on lockfile mismatch — repo is managed without local git
         working-directory: frontend
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Audit dependencies
         working-directory: frontend
@@ -57,6 +59,8 @@ jobs:
         run: npm run build
         env:
           VITE_ADMIN_HASH: ${{ secrets.VITE_ADMIN_HASH }}
+          VITE_SANITY_PROJECT_ID: 3d6emtst
+          VITE_SANITY_DATASET: production
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
