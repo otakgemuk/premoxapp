@@ -1,5 +1,6 @@
 import { defineType, defineField } from 'sanity'
 import { TagIcon } from '@sanity/icons'
+import { ComputedCostInput } from '../components/ComputedCostInput'
 
 export const plan = defineType({
   name: 'plan',
@@ -82,8 +83,8 @@ export const plan = defineType({
     defineField({ name: 'maxFundedAccounts',title: 'Max Funded Accounts',     type: 'number', group: 'rules' }),
     defineField({ name: 'maxContracts',     title: 'Max Contracts',           type: 'number', group: 'rules' }),
     defineField({ name: 'minTradingDays',   title: 'Min Trading Days to Pass',type: 'number', group: 'rules' }),
-    defineField({ name: 'consistencyEval',  title: 'Consistency Rule — Eval (%)',   type: 'number', group: 'rules', validation: (r) => r.min(0).max(100) }),
-    defineField({ name: 'consistencyFunded',title: 'Consistency Rule — Funded (%)', type: 'number', group: 'rules', validation: (r) => r.min(0).max(100) }),
+    defineField({ name: 'consistencyEval',  title: 'Consistency Rule \u2014 Eval (%)',   type: 'number', group: 'rules', validation: (r) => r.min(0).max(100) }),
+    defineField({ name: 'consistencyFunded',title: 'Consistency Rule \u2014 Funded (%)', type: 'number', group: 'rules', validation: (r) => r.min(0).max(100) }),
     defineField({
       name: 'payoutFrequency',
       title: 'Payout Frequency',
@@ -105,14 +106,30 @@ export const plan = defineType({
     defineField({ name: 'monthlyFee',        title: 'Monthly Fee ($)',          type: 'number', group: 'pricing', initialValue: 0 }),
     defineField({ name: 'activeDiscountPct', title: 'Active Discount (%)',      type: 'number', group: 'pricing', initialValue: 0, validation: (r) => r.min(0).max(100) }),
     defineField({ name: 'hasDiscount',       title: 'Has Active Discount',      type: 'boolean', group: 'pricing', initialValue: false }),
-    defineField({ name: 'baseCostToFunded',  title: 'Base Cost to Funded ($)',  type: 'number', group: 'pricing' }),
+    defineField({
+      name: 'discountAppliesToEvalOnly',
+      title: 'Discount applies to Eval fee only (NexGen-style)',
+      description: 'ON: discount hits the eval fee only; activation is paid in full on top. OFF: standard (discount applies to eval + activation together). Drives the Total Cost formula below.',
+      type: 'boolean',
+      group: 'pricing',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'baseCostToFunded',
+      title: 'Base Cost to Funded ($)',
+      description: 'Auto-calculated, read-only. Pre-discount cost: eval + activation (or eval only when One-Time).',
+      type: 'number',
+      group: 'pricing',
+      components: { input: ComputedCostInput },
+    }),
     defineField({
       name: 'totalCostToFunded',
       title: 'Total Cost to Funded ($)',
-      description: 'Standard: (eval+activation)×(1-discount%). NexGen Eval: (eval×(1-discount%))+activation. Instant: eval only.',
+      description: 'Auto-calculated, read-only. Standard: (eval+activation)\u00d7(1\u2212disc). NexGen (toggle above): (eval\u00d7(1\u2212disc))+activation. Instant (One-Time): eval only.',
       type: 'number',
       group: 'pricing',
       validation: (r) => r.required().min(0),
+      components: { input: ComputedCostInput },
     }),
     defineField({ name: 'priceVerified', title: 'Price Verified', type: 'boolean', group: 'meta', initialValue: true }),
     defineField({
@@ -135,7 +152,7 @@ export const plan = defineType({
   preview: {
     select: { title: 'planLabel', subtitle: 'firm.name', discount: 'activeDiscountPct' },
     prepare({ title, subtitle, discount }: any) {
-      return { title, subtitle: subtitle + (discount ? ' · ' + discount + '% off' : '') }
+      return { title, subtitle: subtitle + (discount ? ' \u00b7 ' + discount + '% off' : '') }
     },
   },
 })
